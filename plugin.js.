@@ -1,0 +1,65 @@
+
+(function () {
+    'use strict';
+
+    if (window.LampaPTBRTotal) return;
+    window.LampaPTBRTotal = true;
+
+    function isPTBR(track) {
+        var lang = String(
+            track.language || track.lang || ''
+        ).toLowerCase().replace(/_/g, '-');
+
+        var label = String(track.label || '').toLowerCase();
+
+        return lang === 'pt-br' ||
+            lang === 'pob' ||
+            lang === 'por-br' ||
+            label.indexOf('pt-br') !== -1 ||
+            label.indexOf('português brasileiro') !== -1 ||
+            label.indexOf('brazilian portuguese') !== -1;
+    }
+
+    function selectAudio() {
+        try {
+            var video = Lampa.PlayerVideo.video();
+
+            if (!video || !video.audioTracks ||
+                !video.audioTracks.length) return false;
+
+            var tracks = video.audioTracks;
+            var i;
+
+            for (i = 0; i < tracks.length; i++) {
+                if (isPTBR(tracks[i])) {
+                    for (var j = 0; j < tracks.length; j++) {
+                        tracks[j].enabled = (j === i);
+                    }
+
+                    Lampa.Noty.show('Áudio PT-BR selecionado');
+                    return true;
+                }
+            }
+        } catch (e) {
+            console.log('[PT-BR TOTAL]', e);
+        }
+
+        return false;
+    }
+
+    Lampa.Player.listener.follow('start', function () {
+        var tries = 0;
+
+        function check() {
+            tries++;
+
+            if (selectAudio() || tries >= 10) return;
+
+            setTimeout(check, 1000);
+        }
+
+        check();
+    });
+
+    console.log('Lampa Brasil PT-BR Total carregado');
+})();
